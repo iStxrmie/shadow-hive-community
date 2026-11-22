@@ -6,3 +6,20 @@ const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches
 const clock = document.getElementById('system-clock');
 function updateFacilityClock(){ if(clock) clock.textContent = new Date().toLocaleTimeString('en-GB',{hour12:false}); }
 updateFacilityClock(); setInterval(updateFacilityClock,1000);
+
+// Virus Index: searchable, filterable lore and clearly labelled fan-made files.
+const virusSearch=document.getElementById('virus-search');
+const virusCards=[...document.querySelectorAll('.virus-card')];
+const virusFilters=[...document.querySelectorAll('.virus-filter')];
+const virusCount=document.getElementById('virus-count');
+const virusEmpty=document.getElementById('virus-empty');
+let virusFilter='all';
+function filterVirusFiles(){
+  const query=(virusSearch?.value||'').trim().toLowerCase();let shown=0;
+  virusCards.forEach(card=>{const kind=card.dataset.kind||'canon';const matchesKind=virusFilter==='all'||kind===virusFilter;const haystack=(card.dataset.search+' '+card.textContent).toLowerCase();const matchesText=!query||haystack.includes(query);const visible=matchesKind&&matchesText;card.hidden=!visible;if(visible)shown++;});
+  if(virusCount)virusCount.textContent=shown+' FILE'+(shown===1?'':'S')+' FOUND';
+  if(virusEmpty)virusEmpty.hidden=shown!==0;
+}
+virusSearch?.addEventListener('input',filterVirusFiles);
+virusFilters.forEach(button=>button.addEventListener('click',()=>{virusFilter=button.dataset.filter;virusFilters.forEach(item=>{const active=item===button;item.classList.toggle('active',active);item.setAttribute('aria-pressed',String(active));});filterVirusFiles();}));
+filterVirusFiles();
