@@ -1,35 +1,29 @@
-const toggle=document.querySelector('.menu-toggle');const nav=document.querySelector('#nav');if(toggle&&nav){toggle.addEventListener('click',()=>{const open=nav.classList.toggle('open');toggle.setAttribute('aria-expanded',String(open));});nav.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{nav.classList.remove('open');toggle.setAttribute('aria-expanded','false')}));}
-// Subtle reveal-on-scroll for facility sections; content remains visible if motion is reduced or JS is unavailable.
-const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;if(!reduceMotion&&'IntersectionObserver'in window){const items=document.querySelectorAll('.dept,.archive-card,.section-head,.intro-copy,.access-card,.gallery-placeholder');items.forEach(el=>{el.style.opacity='0';el.style.transform='translateY(16px)';el.style.transition='opacity .65s ease, transform .65s ease'});const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.style.opacity='1';entry.target.style.transform='translateY(0)';observer.unobserve(entry.target)}}),{threshold:.12});items.forEach(el=>observer.observe(el));}
-
-// Simulated Shadow Hive facility bulletin and dashboard clock.
-const clock = document.getElementById('system-clock');
-function updateFacilityClock(){ if(clock) clock.textContent = new Date().toLocaleTimeString('en-GB',{hour12:false}); }
-updateFacilityClock(); setInterval(updateFacilityClock,1000);
-
-// Virus Index: searchable, filterable lore and clearly labelled fan-made files.
-const virusSearch=document.getElementById('virus-search');
-const virusCards=[...document.querySelectorAll('.virus-card')];
-const virusFilters=[...document.querySelectorAll('.virus-filter')];
-const virusCount=document.getElementById('virus-count');
-const virusEmpty=document.getElementById('virus-empty');
-let virusFilter='all';
-function filterVirusFiles(){
-  const query=(virusSearch?.value||'').trim().toLowerCase();let shown=0;
-  virusCards.forEach(card=>{const kind=card.dataset.kind||'canon';const matchesKind=virusFilter==='all'||kind===virusFilter;const haystack=(card.dataset.search+' '+card.textContent).toLowerCase();const matchesText=!query||haystack.includes(query);const visible=matchesKind&&matchesText;card.hidden=!visible;if(visible)shown++;});
-  if(virusCount)virusCount.textContent=shown+' FILE'+(shown===1?'':'S')+' FOUND';
-  if(virusEmpty)virusEmpty.hidden=shown!==0;
+const reports = [
+ {id:"SH-1998-001",title:"Raccoon City Incident",location:"Raccoon City, United States",date:"September 1998",pathogen:"T-Virus",threat:"Critical",status:"Contained",summary:"A catastrophic viral outbreak spread through Raccoon City following the release of the T-virus. Civilian infection escalated rapidly and overwhelmed emergency response capabilities.",timeline:["Initial infection reports emerge across the city.","Police and medical services lose operational control.","Umbrella containment operations intensify.","The city is destroyed in a classified sterilisation operation."],containment:"The incident was officially concealed. Surviving evidence and samples were subject to recovery and suppression operations.",casualties:"Mass casualties; exact figures classified"},
+ {id:"SH-2002-002",title:"Rockfort Island Outbreak",location:"Rockfort Island",date:"December 1998",pathogen:"T-Virus variants",threat:"High",status:"Contained",summary:"A biological attack on a remote island facility resulted in widespread infection among personnel and prisoners. The outbreak compromised the island's security infrastructure.",timeline:["Facility security is compromised during an attack.","Infected personnel reported throughout the compound.","Survivors attempt evacuation from the island."],containment:"The facility was abandoned after the incident. Remaining research material was designated for recovery.",casualties:"Unconfirmed"},
+ {id:"SH-2003-003",title:"Sheena Island Investigation",location:"Sheena Island",date:"1998",pathogen:"T-Virus",threat:"High",status:"Contained",summary:"An investigation into a secret Umbrella research community uncovered a concealed biological weapons programme and an outbreak involving local personnel.",timeline:["Investigation begins into suspicious activity.","Evidence of illegal B.O.W. research is recovered.","The island's operations collapse amid the incident."],containment:"Research records were secured where possible. The full extent of the incident remains disputed.",casualties:"Classified"},
+ {id:"SH-2004-004",title:"Harvardville Airport Incident",location:"Harvardville, United States",date:"2005",pathogen:"T-Virus",threat:"High",status:"Contained",summary:"A viral release at an international airport triggered an emergency lockdown. Infected individuals threatened terminal staff and passengers while response teams worked to isolate the contamination.",timeline:["An infected individual triggers an airport emergency.","Terminal areas are locked down.","Response teams work to identify and isolate infected persons."],containment:"The airport was secured and the immediate outbreak brought under control.",casualties:"Multiple casualties reported"},
+ {id:"SH-2011-005",title:"Tall Oaks Biohazard Event",location:"Tall Oaks, United States",date:"June 2013",pathogen:"C-Virus",threat:"Critical",status:"Under Review",summary:"A large-scale C-virus outbreak devastated Tall Oaks. The incident demonstrated rapid transformation and severe mutation among infected populations.",timeline:["A major biohazard event is reported in the city.","C-virus infection spreads through populated areas.","Emergency response collapses amid widespread mutation."],containment:"The incident was followed by a large-scale military response. Records remain under review.",casualties:"Catastrophic civilian losses"},
+ {id:"SH-2022-006",title:"Dulvey Baker Estate Investigation",location:"Dulvey, Louisiana, United States",date:"2017",pathogen:"Mold / Mutamycete",threat:"Moderate",status:"Uncontained",summary:"An isolated investigation uncovered a household and surrounding area affected by a highly unusual fungal organism capable of altering host behaviour and physiology.",timeline:["Reports of disappearances lead to an investigation.","Evidence of fungal contamination is identified.","The estate becomes the focus of a containment operation."],containment:"The site is treated as a specialised biological hazard zone. Residual contamination is considered a continuing concern.",casualties:"Exact figures unknown"}
+];
+const list=document.getElementById("reportList"), panel=document.getElementById("detailPanel");
+const search=document.getElementById("search"), statusFilter=document.getElementById("statusFilter"), threatFilter=document.getElementById("threatFilter");
+document.getElementById("totalCount").textContent=String(reports.length).padStart(2,"0");
+let selected=reports[0].id;
+function render(){
+ const q=search.value.toLowerCase(), s=statusFilter.value, t=threatFilter.value;
+ const filtered=reports.filter(r=>(s==="all"||r.status===s)&&(t==="all"||r.threat===t)&&[r.id,r.title,r.location,r.pathogen,r.summary].join(" ").toLowerCase().includes(q));
+ list.innerHTML="";
+ if(!filtered.length){list.innerHTML='<div class="report-card"><h3>NO MATCHING RECORDS</h3><p>Adjust your search terms or filters.</p></div>';panel.innerHTML='<div class="panel-head"><span>SELECTED FILE</span><span class="lock">▣ RESTRICTED</span></div><div class="empty-state"><h3>NO RECORD SELECTED</h3><p>No incident files match the current filters.</p></div>';return}
+ filtered.forEach(r=>{
+  const b=document.createElement("button");b.className="report-card"+(r.id===selected?" selected":"");b.type="button";
+  const statusClass=r.status==="Contained"?"contained":r.status==="Under Review"?"review":"";
+  b.innerHTML=`<div class="card-top"><span class="report-id">${r.id}</span><span class="tag ${statusClass}">${r.status.toUpperCase()}</span></div><h3>${r.title}</h3><p>${r.summary}</p><div class="card-bottom"><span>${r.location}</span><span class="threat">${r.threat.toUpperCase()} THREAT</span></div>`;
+  b.addEventListener("click",()=>{selected=r.id;render()});list.appendChild(b);
+ });
+ const active=filtered.find(r=>r.id===selected)||filtered[0];selected=active.id;
+ panel.innerHTML=`<div class="panel-head"><span>INCIDENT INTELLIGENCE</span><span class="lock">▣ RESTRICTED</span></div><div class="detail-content"><div class="file-code">${active.id} // CLASSIFIED</div><h3>${active.title}</h3><p class="summary">${active.summary}</p><div class="detail-facts"><div class="fact"><span>LOCATION</span><strong>${active.location}</strong></div><div class="fact"><span>DATE</span><strong>${active.date}</strong></div><div class="fact"><span>PATHOGEN</span><strong>${active.pathogen}</strong></div><div class="fact"><span>THREAT LEVEL</span><strong class="red">${active.threat.toUpperCase()}</strong></div><div class="fact"><span>CONTAINMENT STATUS</span><strong>${active.status.toUpperCase()}</strong></div><div class="fact"><span>CASUALTY RECORD</span><strong>${active.casualties}</strong></div></div><h4>INCIDENT TIMELINE</h4><ul>${active.timeline.map(x=>`<li>${x}</li>`).join("")}</ul><h4>CONTAINMENT ASSESSMENT</h4><p class="summary">${active.containment}</p></div>`;
 }
-virusSearch?.addEventListener('input',filterVirusFiles);
-virusFilters.forEach(button=>button.addEventListener('click',()=>{virusFilter=button.dataset.filter;virusFilters.forEach(item=>{const active=item===button;item.classList.toggle('active',active);item.setAttribute('aria-pressed',String(active));});filterVirusFiles();}));
-filterVirusFiles();
-
-// Character Dossiers: searchable personnel records and affiliation filters.
-const dossierSearch=document.getElementById('dossier-search');
-const dossierCards=[...document.querySelectorAll('.dossier-card')];
-const dossierFilters=[...document.querySelectorAll('.dossier-filter')];
-const dossierCount=document.getElementById('dossier-count');
-const dossierEmpty=document.getElementById('dossier-empty');
-let dossierFilter='all';
-function filterDossiers(){const query=(dossierSearch?.value||'').trim().toLowerCase();let shown=0;dossierCards.forEach(card=>{const side=card.dataset.side||'heroes';const matchesSide=dossierFilter==='all'||side===dossierFilter;const haystack=(card.dataset.search+' '+card.textContent).toLowerCase();const visible=matchesSide&&(!query||haystack.includes(query));card.hidden=!visible;if(visible)shown++;});if(dossierCount)dossierCount.textContent=shown+' PERSONNEL FILE'+(shown===1?'':'S')+' FOUND';if(dossierEmpty)dossierEmpty.hidden=shown!==0;}
-dossierSearch?.addEventListener('input',filterDossiers);dossierFilters.forEach(button=>button.addEventListener('click',()=>{dossierFilter=button.dataset.dossierFilter;dossierFilters.forEach(item=>{const active=item===button;item.classList.toggle('active',active);item.setAttribute('aria-pressed',String(active));});filterDossiers();}));filterDossiers();
+[search,statusFilter,threatFilter].forEach(el=>el.addEventListener("input",render));
+function updateClock(){document.getElementById("clock").textContent="SYSTEM TIME: "+new Date().toISOString().slice(11,19)+" UTC"}
+updateClock();setInterval(updateClock,1000);render();
