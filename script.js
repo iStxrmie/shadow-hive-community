@@ -23,3 +23,13 @@ function filterVirusFiles(){
 virusSearch?.addEventListener('input',filterVirusFiles);
 virusFilters.forEach(button=>button.addEventListener('click',()=>{virusFilter=button.dataset.filter;virusFilters.forEach(item=>{const active=item===button;item.classList.toggle('active',active);item.setAttribute('aria-pressed',String(active));});filterVirusFiles();}));
 filterVirusFiles();
+
+// Character Dossiers: searchable personnel records and affiliation filters.
+const dossierSearch=document.getElementById('dossier-search');
+const dossierCards=[...document.querySelectorAll('.dossier-card')];
+const dossierFilters=[...document.querySelectorAll('.dossier-filter')];
+const dossierCount=document.getElementById('dossier-count');
+const dossierEmpty=document.getElementById('dossier-empty');
+let dossierFilter='all';
+function filterDossiers(){const query=(dossierSearch?.value||'').trim().toLowerCase();let shown=0;dossierCards.forEach(card=>{const side=card.dataset.side||'heroes';const matchesSide=dossierFilter==='all'||side===dossierFilter;const haystack=(card.dataset.search+' '+card.textContent).toLowerCase();const visible=matchesSide&&(!query||haystack.includes(query));card.hidden=!visible;if(visible)shown++;});if(dossierCount)dossierCount.textContent=shown+' PERSONNEL FILE'+(shown===1?'':'S')+' FOUND';if(dossierEmpty)dossierEmpty.hidden=shown!==0;}
+dossierSearch?.addEventListener('input',filterDossiers);dossierFilters.forEach(button=>button.addEventListener('click',()=>{dossierFilter=button.dataset.dossierFilter;dossierFilters.forEach(item=>{const active=item===button;item.classList.toggle('active',active);item.setAttribute('aria-pressed',String(active));});filterDossiers();}));filterDossiers();
